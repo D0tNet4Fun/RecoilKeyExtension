@@ -1,0 +1,39 @@
+{
+  "name": "recoil-key-extension",
+  "version": "0.7.6",
+  "description": "Use Recoil without setting keys",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "tslint -p tsconfig.json",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files": [
+    "lib/**/*.ts", 
+    "lib/**/*.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/D0tNet4Fun/RecoilKeyExtension.git"
+  },
+  "keywords": [
+    "recoil",
+    "key"
+  ],
+  "author": "D0tNet4Fun",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/D0tNet4Fun/RecoilKeyExtension/issues"
+  },
+  "homepage": "https://github.com/D0tNet4Fun/RecoilKeyExtension#readme",
+  "devDependencies": {
+    "prettier": "^2.8.3",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "recoil": "^0.7.6"
+  }
+}
