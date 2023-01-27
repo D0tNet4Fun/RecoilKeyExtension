@@ -1,5 +1,13 @@
-import { AtomOptions, ReadOnlySelectorOptions, ReadWriteSelectorOptions } from "recoil";
-import { atom, AtomOptionsWithDefault, HasOptionalKey, selector, WithOptionalKey } from "..";
+import { ReadOnlySelectorOptions, ReadWriteSelectorOptions } from "recoil";
+import {
+  atom,
+  atomFamily,
+  AtomFamilyOptionsWithDefault,
+  AtomOptionsWithDefault,
+  HasOptionalKey,
+  selector,
+  WithOptionalKey,
+} from "..";
 
 interface TestValueFactory {
   itemWithoutKey: HasOptionalKey;
@@ -23,7 +31,8 @@ function verifyKey(factory: TestValueFactory) {
   });
   test("when the key is specified, expect this key to be used", () => {
     const item = factory.getItemWithUserDefinedKey("myKey");
-    expect(item.key).toBe("myKey");
+    //expect(item.key).toBe("myKey"); // this is no longer true for atomFamily because recoil ensures the key is unique within the scope of the family, i.e. myKey__0
+    expect(item.key!.startsWith("myKey")).toBeTruthy();
   });
 
   function expectKeyIsGenerated(key?: string | null) {
@@ -33,43 +42,59 @@ function verifyKey(factory: TestValueFactory) {
 }
 
 describe("atom", () => {
-  const options: WithOptionalKey<AtomOptionsWithDefault<number>> = {
+  const atomOptions: WithOptionalKey<AtomOptionsWithDefault<number>> = {
     default: 123,
   };
   const factory: TestValueFactory = {
-    itemWithoutKey: atom(options),
-    itemWithNullKey: atom({ ...options, key: null }),
-    itemWithEmptyKey: atom({ ...options, key: "" }),
-    getItemWithUserDefinedKey: (key) => atom({ ...options, key }),
+    itemWithoutKey: atom(atomOptions),
+    itemWithNullKey: atom({ ...atomOptions, key: null }),
+    itemWithEmptyKey: atom({ ...atomOptions, key: "" }),
+    getItemWithUserDefinedKey: (key) => atom({ ...atomOptions, key }),
+  };
+  verifyKey(factory);
+});
+
+describe("atomFamily", () => {
+  // atomFamily is a function whose result is something that has a key
+  // the test verifies this key
+  const callAtomFamily = (options) => atomFamily(options)(0);
+  const atomFamilyOptions: WithOptionalKey<AtomFamilyOptionsWithDefault<number, any>> = {
+    default: (_param: any) => 123,
+  };
+  const factory: TestValueFactory = {
+    itemWithoutKey: callAtomFamily(atomFamilyOptions),
+    itemWithNullKey: callAtomFamily({ ...atomFamilyOptions, key: null }),
+    itemWithEmptyKey: callAtomFamily({ ...atomFamilyOptions, key: "" }),
+    getItemWithUserDefinedKey: (key) => callAtomFamily({ ...atomFamilyOptions, key }),
   };
   verifyKey(factory);
 });
 
 describe("read-only selector", () => {
   const state = atom({ default: 123 });
-  const options: WithOptionalKey<ReadOnlySelectorOptions<number>> = {
+  const selectorOptions: WithOptionalKey<ReadOnlySelectorOptions<number>> = {
     get: ({ get }) => get(state),
   };
   const factory: TestValueFactory = {
-    itemWithoutKey: selector({ ...options }),
-    itemWithNullKey: selector({ ...options, key: null }),
-    itemWithEmptyKey: selector({ ...options, key: "" }),
-    getItemWithUserDefinedKey: (key) => selector({ ...options, key }),
+    itemWithoutKey: selector({ ...selectorOptions }),
+    itemWithNullKey: selector({ ...selectorOptions, key: null }),
+    itemWithEmptyKey: selector({ ...selectorOptions, key: "" }),
+    getItemWithUserDefinedKey: (key) => selector({ ...selectorOptions, key }),
   };
   verifyKey(factory);
 });
 
 describe("read-write selector", () => {
   const state = atom({ default: 123 });
-  const options: WithOptionalKey<ReadWriteSelectorOptions<number>> = {
+  const selectorOptions: WithOptionalKey<ReadWriteSelectorOptions<number>> = {
     get: ({ get }) => get(state),
     set: ({ set }) => set(state, 456),
   };
   const factory: TestValueFactory = {
-    itemWithoutKey: selector({ ...options }),
-    itemWithNullKey: selector({ ...options, key: null }),
-    itemWithEmptyKey: selector({ ...options, key: "" }),
-    getItemWithUserDefinedKey: (key) => selector({ ...options, key }),
+    itemWithoutKey: selector({ ...selectorOptions }),
+    itemWithNullKey: selector({ ...selectorOptions, key: null }),
+    itemWithEmptyKey: selector({ ...selectorOptions, key: "" }),
+    getItemWithUserDefinedKey: (key) => selector({ ...selectorOptions, key }),
   };
   verifyKey(factory);
 });
