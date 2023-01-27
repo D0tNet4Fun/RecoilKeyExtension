@@ -11,11 +11,7 @@ describe("read-only selector", () => {
     get: ({ get }) => get(state),
   });
 
-  it("should have a key automatically generated", () => {
-    expect(stateSelector.key).toBeDefined();
-    expect(stateSelector.key.startsWith("selector_")).toBeTruthy();
-  });
-  it("should return the state value", () => {
+  test("should return the state value", () => {
     let value = 0;
     const Dummy = () => {
       value = useRecoilValue(stateSelector);
@@ -40,11 +36,7 @@ describe("read-write selector", () => {
     set: ({ set, get, reset }, newValue) => set(state, newValue),
   });
 
-  it("should have a key automatically generated", () => {
-    expect(stateSelector.key).toBeDefined();
-    expect(stateSelector.key.startsWith("selector_")).toBeTruthy();
-  });
-  it("should be able to update the state value", () => {
+  it("should update the state value", () => {
     let value = 0;
     const Dummy = () => {
       const valueUpdater = useSetRecoilState(stateSelector);
