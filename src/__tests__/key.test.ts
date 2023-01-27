@@ -1,4 +1,9 @@
-import { ReadOnlySelectorOptions, ReadWriteSelectorOptions } from "recoil";
+import {
+  ReadOnlySelectorFamilyOptions,
+  ReadOnlySelectorOptions,
+  ReadWriteSelectorFamilyOptions,
+  ReadWriteSelectorOptions,
+} from "recoil";
 import {
   atom,
   atomFamily,
@@ -6,6 +11,7 @@ import {
   AtomOptionsWithDefault,
   HasOptionalKey,
   selector,
+  selectorFamily,
   WithOptionalKey,
 } from "..";
 
@@ -55,11 +61,10 @@ describe("atom", () => {
 });
 
 describe("atomFamily", () => {
-  // atomFamily is a function whose result is something that has a key
-  // the test verifies this key
+  // atomFamily is a function whose result is a atom. the test verifies this atom's key.
   const callAtomFamily = (options) => atomFamily(options)(0);
-  const atomFamilyOptions: WithOptionalKey<AtomFamilyOptionsWithDefault<number, any>> = {
-    default: (_param: any) => 123,
+  const atomFamilyOptions: WithOptionalKey<AtomFamilyOptionsWithDefault<number, number>> = {
+    default: (_param: number) => 123,
   };
   const factory: TestValueFactory = {
     itemWithoutKey: callAtomFamily(atomFamilyOptions),
@@ -95,6 +100,48 @@ describe("read-write selector", () => {
     itemWithNullKey: selector({ ...selectorOptions, key: null }),
     itemWithEmptyKey: selector({ ...selectorOptions, key: "" }),
     getItemWithUserDefinedKey: (key) => selector({ ...selectorOptions, key }),
+  };
+  verifyKey(factory);
+});
+
+describe("read-only selector family", () => {
+  // selectorFamily is a function whose result is a selector. the test verifies this selector's key.
+  const callSelectorFamily = (options) => selectorFamily(options)(0);
+  const state = atom({ default: 123 });
+  const selectorFamilyOptions: WithOptionalKey<ReadOnlySelectorFamilyOptions<number, number>> = {
+    get:
+      (param: number) =>
+      ({ get }) =>
+        param + get(state),
+  };
+  const factory: TestValueFactory = {
+    itemWithoutKey: callSelectorFamily({ ...selectorFamilyOptions }),
+    itemWithNullKey: callSelectorFamily({ ...selectorFamilyOptions, key: null }),
+    itemWithEmptyKey: callSelectorFamily({ ...selectorFamilyOptions, key: "" }),
+    getItemWithUserDefinedKey: (key) => callSelectorFamily({ ...selectorFamilyOptions, key }),
+  };
+  verifyKey(factory);
+});
+
+describe("read-write selector family", () => {
+  // selectorFamily is a function whose result is a selector. the test verifies this selector's key.
+  const callSelectorFamily = (options) => selectorFamily(options)(0);
+  const state = atom({ default: 123 });
+  const selectorFamilyOptions: WithOptionalKey<ReadWriteSelectorFamilyOptions<number, number>> = {
+    get:
+      (param: number) =>
+      ({ get }) =>
+        param + get(state),
+    set:
+      (param: number) =>
+      ({ set }) =>
+        set(state, param),
+  };
+  const factory: TestValueFactory = {
+    itemWithoutKey: callSelectorFamily({ ...selectorFamilyOptions }),
+    itemWithNullKey: callSelectorFamily({ ...selectorFamilyOptions, key: null }),
+    itemWithEmptyKey: callSelectorFamily({ ...selectorFamilyOptions, key: "" }),
+    getItemWithUserDefinedKey: (key) => callSelectorFamily({ ...selectorFamilyOptions, key }),
   };
   verifyKey(factory);
 });
