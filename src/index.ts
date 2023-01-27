@@ -4,12 +4,15 @@ import {
   AtomFamilyOptions,
   AtomOptions,
   Loadable,
+  ReadOnlySelectorFamilyOptions,
   ReadOnlySelectorOptions,
+  ReadWriteSelectorFamilyOptions,
   ReadWriteSelectorOptions,
   RecoilState,
   RecoilValue,
   RecoilValueReadOnly,
   selector as recoilSelector,
+  selectorFamily as recoilSselectorFamily,
   SerializableParam,
   WrappedValue,
 } from "recoil";
@@ -18,7 +21,7 @@ export type HasOptionalKey = {
   key?: string | null;
 };
 export type WithOptionalKey<T> = Omit<T, "key"> & HasOptionalKey;
-type Keyed = "atom" | "atomFamily" | "selector";
+type Keyed = "atom" | "atomFamily" | "selector" | "selectorFamily";
 
 let keyId = 0;
 const generateKey = (prefix: Keyed, item: HasOptionalKey): string => {
@@ -66,4 +69,23 @@ export function selector<T>(
     key: generateKey("selector", options),
   };
   return recoilSelector(selectorOptions);
+}
+
+/**
+ * Returns a function which returns a memoized atom for each unique parameter value, using a default key.
+ */
+export function selectorFamily<T, P extends SerializableParam>(
+  options: WithOptionalKey<ReadOnlySelectorFamilyOptions<T, P>>,
+): (param: P) => RecoilValueReadOnly<T>;
+export function selectorFamily<T, P extends SerializableParam>(
+  options: WithOptionalKey<ReadWriteSelectorFamilyOptions<T, P>>,
+): (param: P) => RecoilState<T>;
+export function selectorFamily<T, P extends SerializableParam>(
+  options: WithOptionalKey<ReadOnlySelectorFamilyOptions<T, P> | WithOptionalKey<ReadWriteSelectorFamilyOptions<T, P>>>,
+) {
+  const selectorFamilyOptions: ReadOnlySelectorFamilyOptions<T, P> | ReadWriteSelectorFamilyOptions<T, P> = {
+    ...options,
+    key: generateKey("selectorFamily", options),
+  };
+  return recoilSselectorFamily(selectorFamilyOptions);
 }
