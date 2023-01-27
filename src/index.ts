@@ -17,17 +17,33 @@ import {
   WrappedValue,
 } from "recoil";
 
+export interface RecoilKeyGenerator {
+  current?: ((prefix: string) => string) | null;
+}
+/**
+ * Allows specifying a user-defined key generator.
+ */
+export const recoilKeyGenerator: RecoilKeyGenerator = {
+  current: undefined,
+};
+
+let keyId = 0;
+const getAutoIncrementedKey = (prefix: string) => `${prefix}_${keyId++}`;
+
+const generateKey = (prefix: Keyed, item: HasOptionalKey): string => {
+  // return the user-defined key if available,
+  // or run the user-defined key generator if specified,
+  // or return a globally auto-incremented key based on the prefix
+  if (item.key) return item.key;
+  const keyGenerator = recoilKeyGenerator.current ?? getAutoIncrementedKey;
+  return keyGenerator(prefix);
+};
+
 export type HasOptionalKey = {
   key?: string | null;
 };
 export type WithOptionalKey<T> = Omit<T, "key"> & HasOptionalKey;
 type Keyed = "atom" | "atomFamily" | "selector" | "selectorFamily";
-
-let keyId = 0;
-const generateKey = (prefix: Keyed, item: HasOptionalKey): string => {
-  if (item.key) return item.key;
-  return `${prefix}_${keyId++}`;
-};
 
 type AtomOptionsDefault<T> = RecoilValue<T> | Promise<T> | Loadable<T> | WrappedValue<T> | T; // from recoil's own AtomOptionsWithDefault
 
