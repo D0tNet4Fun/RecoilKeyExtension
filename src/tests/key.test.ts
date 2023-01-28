@@ -13,32 +13,33 @@ import {
   selector,
   selectorFamily,
   WithOptionalKey,
-} from "..";
+} from "../index";
 
-interface TestValueFactory {
+interface TestValueProvider {
   itemWithoutKey: HasOptionalKey;
   itemWithNullKey: HasOptionalKey;
   itemWithEmptyKey: HasOptionalKey;
   getItemWithUserDefinedKey: (userKey: string) => HasOptionalKey;
 }
 
-function verifyKey(factory: TestValueFactory) {
-  test("when the key is not specified (undefined), expect a key to be auto-generated", () => {
-    const item = factory.itemWithoutKey;
+function testKeys(valueProvider: TestValueProvider) {
+  test("if the key is not specified (undefined), expect a key to be auto-generated", () => {
+    const item = valueProvider.itemWithoutKey;
     expectKeyIsGenerated(item.key);
   });
-  test("when the key is null, expect a key to be auto-generated", () => {
-    const item = factory.itemWithNullKey;
+  test("if the key is null, expect a key to be auto-generated", () => {
+    const item = valueProvider.itemWithNullKey;
     expectKeyIsGenerated(item.key);
   });
-  test("when the key is empty string, expect a key to be auto-generated", () => {
-    const item = factory.itemWithEmptyKey;
+  test("if the key is empty string, expect a key to be auto-generated", () => {
+    const item = valueProvider.itemWithEmptyKey;
     expectKeyIsGenerated(item.key);
   });
-  test("when the key is specified, expect this key to be used", () => {
-    const item = factory.getItemWithUserDefinedKey("myKey");
-    //expect(item.key).toBe("myKey"); // this is no longer true for atomFamily because recoil ensures the key is unique within the scope of the family, i.e. myKey__0
-    expect(item.key!.startsWith("myKey")).toBeTruthy();
+  test("if the key is specified, expect this key to be used", () => {
+    const uniqueKey = "myKey_" + Math.random(); // unique across the test suite
+    const item = valueProvider.getItemWithUserDefinedKey(uniqueKey);
+    // expect(item.key).toBe(key); // this is no longer true for atomFamily/selectorFamily because Recoil ensures the key is unique within the scope of the family, i.e. myKey__0
+    expect(item.key!.startsWith(uniqueKey)).toBeTruthy();
   });
 
   function expectKeyIsGenerated(key?: string | null) {
@@ -51,13 +52,13 @@ describe("atom", () => {
   const atomOptions: WithOptionalKey<AtomOptionsWithDefault<number>> = {
     default: 123,
   };
-  const factory: TestValueFactory = {
+  const valueProvider: TestValueProvider = {
     itemWithoutKey: atom(atomOptions),
     itemWithNullKey: atom({ ...atomOptions, key: null }),
     itemWithEmptyKey: atom({ ...atomOptions, key: "" }),
     getItemWithUserDefinedKey: (key) => atom({ ...atomOptions, key }),
   };
-  verifyKey(factory);
+  testKeys(valueProvider);
 });
 
 describe("atomFamily", () => {
@@ -66,13 +67,13 @@ describe("atomFamily", () => {
   const atomFamilyOptions: WithOptionalKey<AtomFamilyOptionsWithDefault<number, number>> = {
     default: (_param: number) => 123,
   };
-  const factory: TestValueFactory = {
+  const valueProvider: TestValueProvider = {
     itemWithoutKey: callAtomFamily(atomFamilyOptions),
     itemWithNullKey: callAtomFamily({ ...atomFamilyOptions, key: null }),
     itemWithEmptyKey: callAtomFamily({ ...atomFamilyOptions, key: "" }),
     getItemWithUserDefinedKey: (key) => callAtomFamily({ ...atomFamilyOptions, key }),
   };
-  verifyKey(factory);
+  testKeys(valueProvider);
 });
 
 describe("read-only selector", () => {
@@ -80,13 +81,13 @@ describe("read-only selector", () => {
   const selectorOptions: WithOptionalKey<ReadOnlySelectorOptions<number>> = {
     get: ({ get }) => get(state),
   };
-  const factory: TestValueFactory = {
+  const valueProvider: TestValueProvider = {
     itemWithoutKey: selector({ ...selectorOptions }),
     itemWithNullKey: selector({ ...selectorOptions, key: null }),
     itemWithEmptyKey: selector({ ...selectorOptions, key: "" }),
     getItemWithUserDefinedKey: (key) => selector({ ...selectorOptions, key }),
   };
-  verifyKey(factory);
+  testKeys(valueProvider);
 });
 
 describe("read-write selector", () => {
@@ -95,13 +96,13 @@ describe("read-write selector", () => {
     get: ({ get }) => get(state),
     set: ({ set }) => set(state, 456),
   };
-  const factory: TestValueFactory = {
+  const valueProvider: TestValueProvider = {
     itemWithoutKey: selector({ ...selectorOptions }),
     itemWithNullKey: selector({ ...selectorOptions, key: null }),
     itemWithEmptyKey: selector({ ...selectorOptions, key: "" }),
     getItemWithUserDefinedKey: (key) => selector({ ...selectorOptions, key }),
   };
-  verifyKey(factory);
+  testKeys(valueProvider);
 });
 
 describe("read-only selector family", () => {
@@ -114,13 +115,13 @@ describe("read-only selector family", () => {
       ({ get }) =>
         param + get(state),
   };
-  const factory: TestValueFactory = {
+  const valueProvider: TestValueProvider = {
     itemWithoutKey: callSelectorFamily({ ...selectorFamilyOptions }),
     itemWithNullKey: callSelectorFamily({ ...selectorFamilyOptions, key: null }),
     itemWithEmptyKey: callSelectorFamily({ ...selectorFamilyOptions, key: "" }),
     getItemWithUserDefinedKey: (key) => callSelectorFamily({ ...selectorFamilyOptions, key }),
   };
-  verifyKey(factory);
+  testKeys(valueProvider);
 });
 
 describe("read-write selector family", () => {
@@ -137,11 +138,11 @@ describe("read-write selector family", () => {
       ({ set }) =>
         set(state, param),
   };
-  const factory: TestValueFactory = {
+  const valueProvider: TestValueProvider = {
     itemWithoutKey: callSelectorFamily({ ...selectorFamilyOptions }),
     itemWithNullKey: callSelectorFamily({ ...selectorFamilyOptions, key: null }),
     itemWithEmptyKey: callSelectorFamily({ ...selectorFamilyOptions, key: "" }),
     getItemWithUserDefinedKey: (key) => callSelectorFamily({ ...selectorFamilyOptions, key }),
   };
-  verifyKey(factory);
+  testKeys(valueProvider);
 });

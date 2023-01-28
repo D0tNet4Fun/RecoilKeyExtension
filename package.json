@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts*\"",
-    "lint": "tslint -p tsconfig.json",
+    "lint": "tslint -p tsconfig.eslint.json",
     "test": "jest --config jest.config.json"
   },
   "files": [
